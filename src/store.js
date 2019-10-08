@@ -8,13 +8,15 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    authId: '38St7Q8Zi2N1SPa5ahzssq9kbyp1',
+    authId: null,
     users:{},
     services:{},
     rooms:{},
     modals:{
       login: false,
-    }
+      register: false,
+    },
+
   },
   mutations: {
     SET_MODAL_STATE: (state, {name, value}) =>{
@@ -30,7 +32,10 @@ export default new Vuex.Store({
       const newItem = item
       newItem['.key'] = id
       Vue.set(state[resource], id, newItem)
-    }
+    },
+    SET_AUTHID(state, id){
+        state.authId = id
+    },
   },
   actions: {
     TOGGLE_MODAL_STATE: ({ commit }, { name, value }) => {
@@ -74,11 +79,41 @@ export default new Vuex.Store({
           resolve(state.users[id])
         })
     }),
+    CREATE_USER: ({state, commit}, {email, name, password}) => new Promise((resolve)=> {
+        firebase.auth().createUserWithEmailAndPassword(email, password).then((account) =>{
+          const id = account.user.uid
+          const registeredAt = Math.floor(Date.now() / 100)
+          const newUser = {email, name, registeredAt}
+          firebase.database().ref('users').child(id).set(newUser)
+          .then(() =>{
+              commit('SET_ITEM', {resource: 'users', id, item: newUser})
+              resolve(state.users[id])
+          })
+        })
+    }),
+    FETCH_AUTH_USER: ({dispatch, commit}) => {
+        const userId = firebase.auth().currentUser.uid
+        return dispatch('FETCH_USER', {id: userId})
+        .then(()=>{
+          commit('SET_AUTHID', userId)
+        })
+    },
+    SIGN_IN(context, {email, password}){
+      return firebase.auth().signInWithEmailAndPassword(email, password)
+    },
+    LOG_OUT({commit}){
+      firebase.auth().signOut()
+      .then(() => {
+        commit('SET_AUTHID', null)
+      })
+    },
   },
 
   getters:{
     modals: state => state.modals,
-    authUser: state => state.users[state.authId],
+    authUser(state){
+      return (state.authId) ? state.users[state.authId] : null
+    },
     rooms: state => state.rooms,
     userRoomsCount: state => id => countObjectProperties(state.users[id].rooms)
   }

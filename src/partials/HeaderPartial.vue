@@ -3,17 +3,21 @@
     <div class="container">
       <div class="flex items-center justify-between flex-wrap">
         <div class="flex items-center flex-no-shrink mr-6">
-          <a
+          <router-link
+            :to="{name: 'HomePage'}"
             class="text-black hover:text-grey-darkest no-underline font-semibold text-lg"
-            href="#">Platzi Rooms</a>
+            >Platzi Rooms</router-link>
         </div>
         <div class="flex items-center w-auto">
           <div class="items__controls">
             <div class="flex" v-if="user">
-              <button class="mr-2 flex items-center">
+              <router-link  
+                :to="{name: 'CreateHousePage'}"
+                class=" no_underline mr-2 flex items-center">
                 <i class="material-icons">add</i>
-              </button>
-              <button class="mr-4 flex items-center">
+              </router-link>
+              <button
+              class="mr-4 flex items-center">
                 <i class="material-icons">notifications</i>
               </button>
               <div class="flex items-center">
@@ -22,12 +26,17 @@
                   <p class="text-black leading-none">{{user.name}}</p>
                   <p class="text-grey-dark">Online</p>
                 </div>
+                <button class="flex items-center mr-4" @click.prevent="logOut">
+                  <i class="material-icons">exit_to_app</i>  
+                </button>
               </div>
+
             </div>
             <div v-else>
               <button class="btn__outline btn__outline--teal rounded mr-2" @click.prevent="getLogin">Login</button>
               <button
-                class="bg-yellow-dark text-yellow-darker font-semibold py-2 px-4 rounded">
+                class="bg-yellow-dark text-yellow-darker font-semibold py-2 px-4 rounded"
+                @click.prevent="signUp">
                 Register</button>
             </div>
           </div>
@@ -56,8 +65,14 @@ export default {
       })
     },
     signUp() {
-      console.log('Sign Up Click');
+      this.$store.dispatch('TOGGLE_MODAL_STATE',{
+        name: 'register',
+        value: true,
+      })
     },
+    logOut(){
+      this.$store.dispatch('LOG_OUT')
+    }
   },
 
   computed:{
